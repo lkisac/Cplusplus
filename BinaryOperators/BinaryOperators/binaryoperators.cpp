@@ -1,7 +1,7 @@
 /* Len Isac                      
    Bits and Binary Operators Program
    Date: November 20th, 2013 
-   Status: insertBitPattern in UNSIGNED version is being worked on.
+   Status: Added to GitHub with new setBit and insertBitPattern methods.
 */
 
 
@@ -12,7 +12,7 @@
 
 #define SIGNED   1  
 #define UNSIGNED 2
-//#define VERSION SIGNED // SIGNED version
+#define VERSION SIGNED // SIGNED version
 #define VERSION UNSIGNED // UNSIGNED version (comment this line out to enable signed version)
 
 static char bitstr[MAXHEX]; 
