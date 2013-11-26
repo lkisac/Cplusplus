@@ -29,8 +29,13 @@ const char* bits(int val)
 {
     int i;
     int j = 0;
-    for(i = sizeof(int) * 8; i--; bitstr[j++] = !!(val & 1 << i) + '0');
-    bitstr[j] = 0;
+
+    for (i = sizeof(int) * 8; i >= 0; i--, j++)
+    {
+        (val & (1 << (i - 1))) ? bitstr[j] = 1 + '0' : bitstr[j] = 0 + '0';
+    }
+
+    bitstr[--j] = 0;
 
     return bitstr;
 }
@@ -43,7 +48,7 @@ const char* bitrep(int hex)
     binary = new char[strlen(bits(hex)) + 1];
     binary[strlen(binary)] = 0;
     strcpy(binary, bits(hex));
-    for(i = 0, j = 0; i < strlen(binary); i++, j++)
+    for(i = 0, j = 0; i < (signed)strlen(binary); i++, j++)
     {
         (i % 4) == 0  && j > 0 ? printf(" %c", binary[i]) : printf("%c", binary[i]);
     }
@@ -51,9 +56,7 @@ const char* bitrep(int hex)
     return binary;
 }
 
-/* Note: Left shift is the same as multiplying
-   eg. 27 << 0 is the same as 27 * 1 */
-char leftShift(int val) 
+char leftShift(int val)
 {
 
     int shiftno = 0;
@@ -141,10 +144,88 @@ int compare(int orghex)
     return C;
 }
 
+
+int set3(int val, int n, bool setToOne)
+{
+   int mask = setToOne ? 1 << (n-1) : ~(1 << (n-1));
+
+   printf("\nMask created for %s", (setToOne) ? "true:  " : "false: ");
+   bitrep(mask);
+   printf("\n");
+
+   mask = setToOne ? 1 << (n-1) : ~(1 << (n-1));
+
+   if(setToOne)
+   {
+       printf("using | (OR)\n");
+       val = val | mask;
+   }
+   else
+   {
+      printf("using & (AND)\n");
+      val = val & mask;      
+   }
+   
+   printf("After set, \n");   
+   printf("Bit Representation is:  ");
+
+   return val;
+}
+
+
+/*create a function that copies the bit pattern of a character, into an integer, starting from "n"th bit,
+  so the first bit of the character is copied on "n"th bit of the integer and the 8th bit of the character is copied onto "n + 8"th bit of integer*/
+void insertBitPattern(int val)
+{    
+    // forloop variables.
+    int i;
+    int j = 0;
+    // nth bit, mask and user's bit pattern variables.
+    int nth_bit;
+    int mask;
+    char bit[MAXHEX];
+    
+    printf("Enter bit pattern (set of 0's & 1's): ");
+    scanf("%s", &bit);
+
+    //printf("%s length is %d\n", bit, strlen(bit));
+
+    printf("Enter nth position to enter bit pattern: ");
+    scanf("%d", &nth_bit);
+
+    // getmask for integer
+    mask = 1 << (nth_bit -1);
+    for (i = strlen(bit)-1; i >= 0; i--, mask = mask << 1)
+    {
+        //printf("mask representation:    ");
+        if (bit[i] == '1')
+        {
+            val = val | mask;
+            //bitrep(mask);
+        }
+        else 
+        {
+            val = val & ~mask;
+            //bitrep(~mask);
+        }
+       /*printf("\n");        
+       printf("val representation is:  ");
+       bitrep(val);
+       printf("\n");*/
+    }
+    printf("val representation is:  ");
+    bitrep(val);
+    printf("\n");   
+}
+
+
 int main ()
 {
-    int hex;
-    int choice;
+    int hex = 0;
+    int choice = 0;
+    int nth_bit = 0;
+    bool setToTrue = 0;
+
 
     printf("Hexadecimal Converter\n");
     printf("=====================\n");
@@ -160,8 +241,8 @@ int main ()
             printf("Bit Representation is:  ");
             bitrep(hex);
     
-            printf("\n\nSelect an option\n");
-            printf("1) Left Shift\n2) Right Shift\n3) Reverse\n4) Compare with another hexadecimal value\n");
+            printf("\nSelect an option\n");
+            printf("1) Left Shift\n2) Right Shift\n3) Reverse\n4) Compare with another hexadecimal value\n5) Set bit\n6) Insert Bit Pattern\n");
             scanf("%d", &choice);
             fflush(stdin);
 
@@ -179,9 +260,22 @@ int main ()
             case 4:
                 printf("\nCompare result is: %X\n", compare(hex));
                 break;
+            case 5:
+                printf("Which bit to set: ");
+                scanf("%u", &nth_bit);
+                fflush(stdin);
+                printf("Set to 0) false, 1) true: ");
+                scanf("%u", &setToTrue);                
+                fflush(stdin);
+                bitrep(set3(hex, nth_bit, setToTrue));
+                printf("\n");
+                break;
+            case 6:
+                insertBitPattern(hex);
+                break;
             }
         }
-    }while(hex != 0);
+    }while(hex != 0);    
 
     return 0;
 }
@@ -196,7 +290,7 @@ int main ()
 /****************************************/
 
 #if VERSION == UNSIGNED
-const char* bits(unsigned int val)
+const char* bits(int val)
 {
     int i;
     int j = 0;
@@ -211,15 +305,15 @@ const char* bits(unsigned int val)
     return bitstr;
 }
 
-const char* bitrep(unsigned int hex)
+const char* bitrep(int hex)
 {
     char* binary;
     int i, j;
 
-    binary = new char[strlen(bits((unsigned int)hex)) + 1];
+    binary = new char[strlen(bits(hex)) + 1];
     binary[strlen(binary)] = 0;
-    strcpy(binary, bits((unsigned int)hex));
-    for(i = 0, j = 0; i < (signed)strlen(binary); i++, j++)
+    strcpy(binary, bits(hex));
+    for(i = 0, j = 0; i < strlen(binary); i++, j++)
     {
         (i % 4) == 0  && j > 0 ? printf(" %c", binary[i]) : printf("%c", binary[i]);
     }
@@ -227,11 +321,11 @@ const char* bitrep(unsigned int hex)
     return binary;
 }
 
-unsigned char leftShift(unsigned int val)
+char leftShift(int val)
 {
 
-    unsigned int shiftno = 0;
-    unsigned int lsHex;
+    int shiftno = 0;
+    int lsHex;
 
     printf("Left Shift by how many bits: ");
     scanf("%d", &shiftno);
@@ -246,10 +340,10 @@ unsigned char leftShift(unsigned int val)
     return lsHex;
 }
 
-unsigned char rightShift(unsigned int val)
+char rightShift(int val)
 {
-    unsigned int shiftno = 0;
-    unsigned int rsHex;
+    int shiftno = 0;
+    int rsHex;
 
     printf("Right Shift by how many bits: ");
     scanf("%d", &shiftno);
@@ -264,9 +358,9 @@ unsigned char rightShift(unsigned int val)
     return rsHex;
 }
 
-unsigned int reverse(unsigned int orghex)
+int reverse(int orghex)
 {
-    unsigned int revHex;
+    int revHex;
 
     revHex = ~orghex;
     printf("Reverse result is: %X\n", revHex);
@@ -277,11 +371,11 @@ unsigned int reverse(unsigned int orghex)
     return revHex;
 }
 
-unsigned int compare(unsigned int orghex)
+int compare(int orghex)
 {
     int choice = 0;
-    unsigned int hexComp;
-    unsigned int C;
+    int hexComp;
+    int C;
 
     printf("Enter hex value to compare: ");
     scanf("%X", &hexComp);
@@ -316,9 +410,9 @@ unsigned int compare(unsigned int orghex)
 }
 
 
-unsigned int set3(unsigned int val, int n, bool setToOne)
+int set3(int val, int n, bool setToOne)
 {
-   unsigned int mask = setToOne ? 1 << (n-1) : ~(1 << (n-1));
+   int mask = setToOne ? 1 << (n-1) : ~(1 << (n-1));
 
    printf("\nMask created for %s", (setToOne) ? "true:  " : "false: ");
    bitrep(mask);
@@ -346,14 +440,14 @@ unsigned int set3(unsigned int val, int n, bool setToOne)
 
 /*create a function that copies the bit pattern of a character, into an integer, starting from "n"th bit,
   so the first bit of the character is copied on "n"th bit of the integer and the 8th bit of the character is copied onto "n + 8"th bit of integer*/
-void insertBitPattern(unsigned int val)
+void insertBitPattern(int val)
 {    
     // forloop variables.
     int i;
-    unsigned int j = 0;
+    int j = 0;
     // nth bit, mask and user's bit pattern variables.
-    unsigned int nth_bit;
-    unsigned int mask;
+    int nth_bit;
+    int mask;
     char bit[MAXHEX];
     
     printf("Enter bit pattern (set of 0's & 1's): ");
@@ -366,7 +460,7 @@ void insertBitPattern(unsigned int val)
 
     // getmask for integer
     mask = 1 << (nth_bit -1);
-    for (i = (signed)strlen(bit)-1; i >= 0; i--, mask = mask << 1)
+    for (i = strlen(bit)-1; i >= 0; i--, mask = mask << 1)
     {
         //printf("mask representation:    ");
         if (bit[i] == '1')
@@ -392,9 +486,9 @@ void insertBitPattern(unsigned int val)
 
 int main ()
 {
-    unsigned int hex = 0;
+    int hex = 0;
     int choice = 0;
-    unsigned int nth_bit = 0;
+    int nth_bit = 0;
     bool setToTrue = 0;
 
 
